@@ -4,7 +4,14 @@ A cube timer focused on statistics.
 
 ## Contributing
 
-To contribute to this project, you will need to have npm installed, which you can install through [node.js](https://nodejs.org/en/download/). After cloning this repository and being inside the root directory, start development by running the following command to start the development server:
+To contribute to this project, you will need to have npm installed, which you can install through [node.js](https://nodejs.org/en/download/). After cloning this repository and being inside the root directory, 
+begin by installing needed modules:
+
+```bash
+npm install
+```
+
+Now, you can start development by running the following command to start the development server:
 
 ```bash
 npm run dev
