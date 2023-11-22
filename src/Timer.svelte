@@ -1,53 +1,85 @@
 <script lang="ts">
+	import "./css/main.css";
+	import { Scrambow } from "scrambow";
+
 	let time = "0";
-	let tempDate: Date;
 	let startDate: Date;
 	let interval: number;
 	let timing = false;
+	let keyDown = false;
 	let timeArray: string[] = [];
+	let timeColor = "black";
+	let scrambleType = "333";
+	$: scramble = new Scrambow().setType(scrambleType).get()[0].scramble_string;
 
 	function handleKeyDown(event: KeyboardEvent) {
-		console.log("key down!");
-		if (event.key === " " && !event.repeat) {
+		if (!keyDown) {
 			if (timing) {
-				tempDate = new Date();
+				time = ((new Date().getTime() - startDate.getTime()) / 1000).toFixed(2);
 				clearInterval(interval);
-				time = ((tempDate.getTime() - startDate.getTime()) / 1000).toFixed(2);
 				timeArray = [...timeArray, time];
-			} else {
+				scramble = new Scrambow().setType(scrambleType).get()[0].scramble_string;
+			} else if (event.key === " ") {
 				time = "0";
+				timeColor = "green";
+				scramble = "";
 			}
+			keyDown = true;
 		}
 	}
 
 	function handleKeyUp(event: KeyboardEvent) {
-		console.log("key up!");
-		if (event.key === " " && !timing) {
-			startDate = new Date();
-			interval = setInterval(() => {
-				tempDate = new Date();
-				time = Math.trunc((tempDate.getTime() - startDate.getTime()) / 1000).toString();
-			}, 10);
+		if (keyDown) {
+			if (event.key === " " && !timing) {
+				startDate = new Date();
+				interval = setInterval(() => {
+					time = Math.trunc((new Date().getTime() - startDate.getTime()) / 1000).toString();
+				}, 10);
+				timing = true;
+				timeColor = "black";
+			} else if (timing) {
+				timing = false;
+			}
+			keyDown = false;
 		}
-		timing = !timing;
 	}
 
 	function resetTimes() {
 		timeArray = [];
+		time = "0";
 	}
 </script>
 
 <svelte:window on:keydown={handleKeyDown} on:keyup={handleKeyUp} />
-<h1>
+<h3>
+	{scramble}
+</h3>
+<select bind:value={scrambleType}>
+	<option value="333">3x3</option>
+	<option value="222">2x2</option>
+	<option value="sq1">sq1</option>
+</select>
+<h1 style="color: {timeColor}">
 	{time}
 </h1>
 <div>
 	<button on:click={resetTimes}> Reset Times </button>
-	<ol>
+	<table>
+		<tr>
+			<th> # </th>
+			<th> Time </th>
+			<th> ao5 </th>
+			<th> ao12 </th>
+		</tr>
 		{#each timeArray as eachTime, i (i)}
-			<li>{eachTime}</li>
+			<tr>
+				<td>{i + 1}</td>
+				<td>{eachTime}</td>
+				<td>{eachTime}</td>
+				<td>{eachTime}</td>
+			</tr>
 		{/each}
-	</ol>
+	</table>
 </div>
 
 <style>
@@ -62,33 +94,8 @@
 		font-size: 10em;
 	}
 
-	button {
-		display: inline-block;
-		border: 1px solid #0366ee;
-		border-radius: 4px;
-		background: #0366ee;
-		color: #ffffff;
-		font-weight: 600;
-		font-family:
-			-apple-system,
-			BlinkMacSystemFont,
-			Helvetica Neue,
-			Helvetica,
-			Arial,
-			sans-serif;
-		font-size: 1rem;
-		text-transform: none;
-		padding: 0.75rem 1.25rem;
-		margin: 0 0 0.5rem 0;
-		vertical-align: middle;
+	h3 {
 		text-align: center;
-		cursor: pointer;
-		text-decoration: none;
-		line-height: 1;
-	}
-
-	li {
-		font-family: Helvetica;
 	}
 
 	div {
