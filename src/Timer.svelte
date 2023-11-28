@@ -2,23 +2,43 @@
 	import "./css/main.css";
 	import { Scrambow } from "scrambow";
 
+	interface timeEntry {
+		time: string;
+		ao5: string;
+		ao12: string;
+	}
+
+	let scrambleSelect: HTMLSelectElement;
+	let resetButton: HTMLButtonElement;
+
 	let time = "0";
 	let startDate: Date;
 	let interval: number;
 	let timing = false;
 	let keyDown = false;
-	let timeArray: string[] = [];
+	
+	let timeArray: timeEntry[] = [];
 	let timeColor = "black";
 	let scrambleType = "333";
 	$: scramble = new Scrambow().setType(scrambleType).get()[0].scramble_string;
+
 
 	function handleKeyDown(event: KeyboardEvent) {
 		if (!keyDown) {
 			if (timing) {
 				time = ((new Date().getTime() - startDate.getTime()) / 1000).toFixed(2);
 				clearInterval(interval);
-				timeArray = [...timeArray, time];
+				//let ao5 = calculateAverage(5);
+
+				let newEntry: timeEntry = {
+					time: time,
+					ao5: calculateAverage(5),
+					ao12: calculateAverage(12),
+				}
+
+				timeArray = [...timeArray, newEntry];
 				scramble = new Scrambow().setType(scrambleType).get()[0].scramble_string;
+				
 			} else if (event.key === " ") {
 				time = "0";
 				timeColor = "green";
@@ -47,6 +67,40 @@
 	function resetTimes() {
 		timeArray = [];
 		time = "0";
+		resetButton.blur();
+		
+	}
+
+	function calculateAverage(count: number) {
+		// need at least x numbers for an average of x
+		if (timeArray.length < (count - 1)) {
+			console.log(timeArray.length);
+			return "-";
+		}
+
+		// we're taking the last x - 1 numbers from the array, and convert to an array of numbers
+		// it's x - 1 because the current time isn't added to the array yet, so we'll add it manually
+		let timeSubArray = timeArray.slice(timeArray.length - count + 1);
+		let timeNums: number[] = [Number(time)];
+		
+		timeSubArray.forEach((timeEntry) => {
+			timeNums.push(Number(timeEntry.time));
+		})
+
+		timeNums.sort();
+
+		
+		// general rule for finding aoX is to exclude the top and bottom 5% of times
+		// there are x - 2(margin) counting times, for ex. an ao5 has 3 counting times
+		let excludeMargin = Math.ceil(count * 0.05);
+		let totalCountingTimes = count - 2 * excludeMargin;
+		let sum = 0;
+
+		for (let i = excludeMargin; i < timeNums.length - excludeMargin; i++) {
+			sum += timeNums[i];
+		}
+
+		return (sum / totalCountingTimes).toFixed(2);
 	}
 </script>
 
@@ -54,7 +108,7 @@
 <h3>
 	{scramble}
 </h3>
-<select bind:value={scrambleType}>
+<select bind:value={scrambleType} bind:this={scrambleSelect} on:change={function() {scrambleSelect.blur();}}>
 	<option value="333">3x3</option>
 	<option value="222">2x2</option>
 	<option value="sq1">sq1</option>
@@ -63,7 +117,7 @@
 	{time}
 </h1>
 <div>
-	<button on:click={resetTimes}> Reset Times </button>
+	<button on:click={resetTimes} bind:this={resetButton}> Reset Times </button>
 	<table>
 		<tr>
 			<th> # </th>
@@ -71,12 +125,12 @@
 			<th> ao5 </th>
 			<th> ao12 </th>
 		</tr>
-		{#each timeArray as eachTime, i (i)}
+		{#each timeArray as {time, ao5, ao12}, i (i)}
 			<tr>
 				<td>{i + 1}</td>
-				<td>{eachTime}</td>
-				<td>{eachTime}</td>
-				<td>{eachTime}</td>
+				<td>{time}</td>
+				<td>{ao5}</td>
+				<td>{ao12}</td>
 			</tr>
 		{/each}
 	</table>
