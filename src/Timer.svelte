@@ -1,6 +1,7 @@
 <script lang="ts">
 	import "./css/main.css";
 	import { Scrambow } from "scrambow";
+	import Page from "./routes/+page.svelte";
 
 	let time = "0";
 	let startDate: Date;
@@ -9,6 +10,8 @@
 	let keyDown = false;
 	let timeArray: string[] = [];
 	let timeColor = "black";
+	let resetButton: HTMLButtonElement;
+	let eventSelector: HTMLSelectElement;
 	let scrambleType = "333";
 	$: scramble = new Scrambow().setType(scrambleType).get()[0].scramble_string;
 
@@ -47,6 +50,7 @@
 	function resetTimes() {
 		timeArray = [];
 		time = "0";
+		resetButton.blur();
 	}
 </script>
 
@@ -54,16 +58,32 @@
 <h3>
 	{scramble}
 </h3>
-<select bind:value={scrambleType}>
+<select
+	on:change={() => {
+		eventSelector.blur();
+	}}
+	bind:this={eventSelector}
+	bind:value={scrambleType}
+>
 	<option value="333">3x3</option>
 	<option value="222">2x2</option>
-	<option value="sq1">sq1</option>
+	<option value="444">4x4</option>
+	<option value="555">5x5</option>
+	<option value="666">6x6</option>
+	<option value="777">7x7</option>
+	<option value="333">3x3 OH</option>
+	<option value="333fm">3x3 FMC</option>
+	<option value="minx">Megaminx</option>
+	<option value="pyram">Pyraminx</option>
+	<option value="skewb">Skewb</option>
+	<option value="sq1">Square-1</option>
+	<option value="clock">Clock</option>
 </select>
 <h1 style="color: {timeColor}">
 	{time}
 </h1>
 <div>
-	<button on:click={resetTimes}> Reset Times </button>
+	<button on:click={resetTimes} bind:this={resetButton}> Reset Times </button>
 	<table>
 		<tr>
 			<th> # </th>
