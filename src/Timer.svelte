@@ -23,22 +23,23 @@
 				time = ((new Date().getTime() - startDate.getTime()) / 1000).toFixed(2);
 				clearInterval(interval);
 
-				// Construct new time entry with current time, ao5, and ao12
+				/* Construct new time entry with current time, ao5, and ao12.
+				   The pushTimeEntry() method for timeStore calculates the ao5/ao12
+				   while pushing, so no need to calculate it here */
 				let newEntry: TimeEntry = {
 					time: time,
-					ao5: calculateAverage(5),
-					ao12: calculateAverage(12)
+					ao5: "-",
+					ao12: "-"
 				};
 
 				timeStore.pushTimeEntry(newEntry);
-				// gen new scramble?
 			} else if (event.key === " ") {
 				// Indicate that timer is ready to time
 				time = "0";
 				timeColor = "green";
-				// make scramble disappear (ideally)
 			}
 			keyDown = true; // To prevent repeat KeyDown events
+			console.log($timing);
 		}
 	}
 
@@ -58,43 +59,14 @@
 						(new Date().getTime() - startDate.getTime()) / 1000
 					).toString();
 				}, 10);
-				$timing = true;
+				timing.set(true);
 				timeColor = "black";
-			} else if (timing) {
-				$timing = false;
+			} else if ($timing) {
+				timing.set(false);
 			}
 			keyDown = false; // To prevent repeat KeyUp events
+			console.log($timing);
 		}
-	}
-
-	function calculateAverage(count: number) {
-		// need at least x numbers for an average of x
-		if ($timeStore.length < count - 1) {
-			return "-";
-		}
-
-		// we're taking the last x - 1 numbers from the array, and convert to an array of numbers
-		// it's x - 1 because the current time isn't added to the array yet, so we'll add it manually
-		let timeSubArray = $timeStore.slice($timeStore.length - count + 1);
-		let timeNums: number[] = [Number(time)];
-
-		timeSubArray.forEach((timeEntry) => {
-			timeNums.push(Number(timeEntry.time));
-		});
-
-		timeNums.sort();
-
-		// general rule for finding aoX is to exclude the top and bottom 5% of times
-		// there are x - 2(margin) counting times, for ex. an ao5 has 3 counting times
-		let excludeMargin = Math.ceil(count * 0.05);
-		let totalCountingTimes = count - 2 * excludeMargin;
-		let sum = 0;
-
-		for (let i = excludeMargin; i < timeNums.length - excludeMargin; i++) {
-			sum += timeNums[i];
-		}
-
-		return (sum / totalCountingTimes).toFixed(2);
 	}
 </script>
 

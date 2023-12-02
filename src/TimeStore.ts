@@ -21,8 +21,18 @@ function createTimeStore() {
 	return {
 		subscribe,
 		pushTimeEntry: (timeEntry: TimeEntry) =>
-			// using ES spread operator to add new TimeEntry to the store
-			update((timeArray: TimeEntry[]) => [...timeArray, timeEntry]),
+			update((timeArray: TimeEntry[]) => {
+				/* Update method pushes new time entry and calculates/includes
+				   ao5 and ao12 in the newest entry */
+				timeArray.push(timeEntry);
+				
+				let ao5 = calculateAverage(timeArray, 5, timeArray.length - 5);
+				let ao12 = calculateAverage(timeArray, 12, timeArray.length - 12);
+
+				timeArray[timeArray.length - 1].ao5 = ao5;
+				timeArray[timeArray.length - 1].ao12 = ao12;
+				return timeArray;
+			}),
 		deleteTimeEntry: (index: number) =>
 			update((timeArray: TimeEntry[]) => {
 				// splice method removes TimEntry at provided index
@@ -37,3 +47,34 @@ export const timeStore = createTimeStore();
 // timing keeps track of whether the timer is currently timing
 export const timing = writable<boolean>(false);
 export type { TimeEntry };
+
+
+// Function to calculate averages for each TimeEntry
+function calculateAverage(timeArray: TimeEntry[], count: number, startIndex: number) {
+	// need at least x numbers for an average of x
+	if (count + startIndex > timeArray.length || startIndex < 0) {
+		return "-";
+	}
+
+	// we're taking the last x numbers from the array, and convert to an array of numbers
+	let timeSubArray = timeArray.slice(startIndex, startIndex + count);
+	let timeNums: number[] = [];
+
+	timeSubArray.forEach((timeEntry) => {
+		timeNums.push(Number(timeEntry.time));
+	});
+
+	timeNums.sort();
+
+	// general rule for finding aoX is to exclude the top and bottom 5% of times
+	// there are x - 2(margin) counting times, for ex. an ao5 has 3 counting times
+	let excludeMargin = Math.ceil(count * 0.05);
+	let totalCountingTimes = count - 2 * excludeMargin;
+	let sum = 0;
+
+	for (let i = excludeMargin; i < timeNums.length - excludeMargin; i++) {
+		sum += timeNums[i];
+	}
+
+	return (sum / totalCountingTimes).toFixed(2);
+}

@@ -1,16 +1,15 @@
 <script lang="ts">
 	import { randomScrambleForEvent } from "cubing/scramble";
-	import type { Alg } from "cubing/alg";
 	import { timing } from "./TimeStore";
 
 	let eventSelector: HTMLSelectElement;
-	let scramblePromise: Promise<Alg>;
 	let scrambleType = "333";
+	let scramblePromise = randomScrambleForEvent(scrambleType);
 
 	/* Reactive declaration: if $timing store or scrambleType change (and $timing
-       is false), generate a new scramble */
+       is true), generate a new scramble */
 	$: {
-		if (!$timing) {
+		if ($timing) {
 			scramblePromise = randomScrambleForEvent(scrambleType);
 		}
 	}
