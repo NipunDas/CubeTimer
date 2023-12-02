@@ -29,6 +29,6 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"scrambow": "^1.8.1"
+		"cubing": "^0.43.10"
 	}
 }

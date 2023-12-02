@@ -1,5 +1,5 @@
 <script>
-	import MyApp from "../MyApp.svelte";
+	import App from "../App.svelte";
 </script>
 
-<MyApp />
+<App />

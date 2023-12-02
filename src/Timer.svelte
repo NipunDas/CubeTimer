@@ -1,83 +1,81 @@
 <script lang="ts">
-	import "./css/main.css";
-	import { Scrambow } from "scrambow";
-
-	interface timeEntry {
-		time: string;
-		ao5: string;
-		ao12: string;
-	}
-
-	let eventSelector: HTMLSelectElement;
-	let resetButton: HTMLButtonElement;
+	import { timeStore, timing } from "./TimeStore";
+	import type { TimeEntry } from "./TimeStore";
 
 	let time = "0";
-	let startDate: Date;
-	let interval: number;
-	let timing = false;
-	let keyDown = false;
+	let startDate: Date; // To calculate total time
+	let interval: number; // To keep track of the interval that does the timing
+	let keyDown = false; // To avoid key press repeats
 
-	let timeArray: timeEntry[] = [];
-	let timeColor = "black";
-	let scrambleType = "333";
-	$: scramble = new Scrambow().setType(scrambleType).get()[0].scramble_string;
+	let timeColor = "black"; // green if ready to time, black otherwise
 
+	/* Key down input: If timing is true, then regardless of what key is pressed,
+	   you want to stop timing (makes it easy to stop the timer in situations like
+	   blind events, etc.). The timing boolean is intentionally not set to false
+	   so that when the key is lifted after the timing has stopped, the timer isn't
+	   started again. If timing is not true, then check if the user is pressing the
+	   space bar. If so, indicate that the timer is ready to time (set the display
+	   time to 0 and make the time green).*/
 	function handleKeyDown(event: KeyboardEvent) {
 		if (!keyDown) {
-			if (timing) {
+			if ($timing) {
+				// Stop timing at current time
 				time = ((new Date().getTime() - startDate.getTime()) / 1000).toFixed(2);
 				clearInterval(interval);
-				//let ao5 = calculateAverage(5);
 
-				let newEntry: timeEntry = {
+				// Construct new time entry with current time, ao5, and ao12
+				let newEntry: TimeEntry = {
 					time: time,
 					ao5: calculateAverage(5),
 					ao12: calculateAverage(12)
 				};
 
-				timeArray = [...timeArray, newEntry];
-				scramble = new Scrambow().setType(scrambleType).get()[0].scramble_string;
+				timeStore.pushTimeEntry(newEntry);
+				// gen new scramble?
 			} else if (event.key === " ") {
+				// Indicate that timer is ready to time
 				time = "0";
 				timeColor = "green";
-				scramble = "";
+				// make scramble disappear (ideally)
 			}
-			keyDown = true;
+			keyDown = true; // To prevent repeat KeyDown events
 		}
 	}
 
+	/* Key up input: If timing is false and space key is lifted, then start timing by
+	   recording the start time and setting an interval to update the current time.
+	   Set the timing boolean to true and change the time display's color to black.
+	   Otherwise, if timing is true, then set it to false to indicate that timing is
+	   no longer occurring. */
 	function handleKeyUp(event: KeyboardEvent) {
 		if (keyDown) {
-			if (event.key === " " && !timing) {
+			if (event.key === " " && !$timing) {
+				// Record starting time
 				startDate = new Date();
+				// Interval to update time dispaly, refreshes every 10 seconds
 				interval = setInterval(() => {
-					time = Math.trunc((new Date().getTime() - startDate.getTime()) / 1000).toString();
+					time = Math.trunc(
+						(new Date().getTime() - startDate.getTime()) / 1000
+					).toString();
 				}, 10);
-				timing = true;
+				$timing = true;
 				timeColor = "black";
 			} else if (timing) {
-				timing = false;
+				$timing = false;
 			}
-			keyDown = false;
+			keyDown = false; // To prevent repeat KeyUp events
 		}
-	}
-
-	function resetTimes() {
-		timeArray = [];
-		time = "0";
-		resetButton.blur();
 	}
 
 	function calculateAverage(count: number) {
 		// need at least x numbers for an average of x
-		if (timeArray.length < count - 1) {
-			console.log(timeArray.length);
+		if ($timeStore.length < count - 1) {
 			return "-";
 		}
 
 		// we're taking the last x - 1 numbers from the array, and convert to an array of numbers
 		// it's x - 1 because the current time isn't added to the array yet, so we'll add it manually
-		let timeSubArray = timeArray.slice(timeArray.length - count + 1);
+		let timeSubArray = $timeStore.slice($timeStore.length - count + 1);
 		let timeNums: number[] = [Number(time)];
 
 		timeSubArray.forEach((timeEntry) => {
@@ -98,68 +96,13 @@
 
 		return (sum / totalCountingTimes).toFixed(2);
 	}
-
-	function deleteEntry(index: number) {
-		// delete the entry at index using array splice method
-		console.log("deleting! ", index);
-		console.log(timeArray.length);
-		timeArray.splice(index, 1);
-		timeArray = timeArray;
-		console.log(timeArray.length);
-	}
 </script>
 
 <svelte:window on:keydown={handleKeyDown} on:keyup={handleKeyUp} />
-<h3>
-	{scramble}
-</h3>
-<select
-	on:change={() => {
-		eventSelector.blur();
-	}}
-	bind:this={eventSelector}
-	bind:value={scrambleType}
->
-	<option value="333">3x3</option>
-	<option value="222">2x2</option>
-	<option value="444">4x4</option>
-	<option value="555">5x5</option>
-	<option value="666">6x6</option>
-	<option value="777">7x7</option>
-	<option value="333">3x3 OH</option>
-	<option value="333fm">3x3 FMC</option>
-	<option value="minx">Megaminx</option>
-	<option value="pyram">Pyraminx</option>
-	<option value="skewb">Skewb</option>
-	<option value="sq1">Square-1</option>
-	<option value="clock">Clock</option>
-</select>
+
 <h1 style="color: {timeColor}">
 	{time}
 </h1>
-<div>
-	<button on:click={resetTimes} bind:this={resetButton}> Reset Times </button>
-	<table>
-		<tr>
-			<th> # </th>
-			<th> Time </th>
-			<th> ao5 </th>
-			<th> ao12 </th>
-			<th> Delete </th>
-		</tr>
-		{#each timeArray as { time, ao5, ao12 }, i (i)}
-			<tr>
-				<td>{i + 1}</td>
-				<td>{time}</td>
-				<td>{ao5}</td>
-				<td>{ao12}</td>
-				<td>
-					<button on:click={() => deleteEntry(i)}> X </button>
-				</td>
-			</tr>
-		{/each}
-	</table>
-</div>
 
 <style>
 	@font-face {
@@ -171,13 +114,5 @@
 		font-family: "digital-clock-font";
 		text-align: center;
 		font-size: 10em;
-	}
-
-	h3 {
-		text-align: center;
-	}
-
-	div {
-		padding-left: 20px;
 	}
 </style>
