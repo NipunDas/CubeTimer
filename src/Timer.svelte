@@ -8,7 +8,7 @@
 		ao12: string;
 	}
 
-	let scrambleSelect: HTMLSelectElement;
+	let eventSelector: HTMLSelectElement;
 	let resetButton: HTMLButtonElement;
 
 	let time = "0";
@@ -16,12 +16,11 @@
 	let interval: number;
 	let timing = false;
 	let keyDown = false;
-	
+
 	let timeArray: timeEntry[] = [];
 	let timeColor = "black";
 	let scrambleType = "333";
 	$: scramble = new Scrambow().setType(scrambleType).get()[0].scramble_string;
-
 
 	function handleKeyDown(event: KeyboardEvent) {
 		if (!keyDown) {
@@ -46,7 +45,6 @@
 
 
 				scramble = new Scrambow().setType(scrambleType).get()[0].scramble_string;
-				
 			} else if (event.key === " ") {
 				time = "0";
 				timeColor = "green";
@@ -76,7 +74,6 @@
 		timeArray = [];
 		time = "0";
 		resetButton.blur();
-		
 	}
 
 	function calculateAverage(count: number, startIndex: number) {
@@ -91,11 +88,10 @@
 		
 		timeSubArray.forEach((timeEntry) => {
 			timeNums.push(Number(timeEntry.time));
-		})
+		});
 
 		timeNums.sort();
 
-		
 		// general rule for finding aoX is to exclude the top and bottom 5% of times
 		// there are x - 2(margin) counting times, for ex. an ao5 has 3 counting times
 		let excludeMargin = Math.ceil(count * 0.05);
@@ -108,16 +104,41 @@
 
 		return (sum / totalCountingTimes).toFixed(2);
 	}
+
+	function deleteEntry(index: number) {
+		// delete the entry at index using array splice method
+		console.log("deleting! ", index);
+		console.log(timeArray.length);
+		timeArray.splice(index, 1);
+		timeArray = timeArray;
+		console.log(timeArray.length);
+	}
 </script>
 
 <svelte:window on:keydown={handleKeyDown} on:keyup={handleKeyUp} />
 <h3>
 	{scramble}
 </h3>
-<select bind:value={scrambleType} bind:this={scrambleSelect} on:change={function() {scrambleSelect.blur();}}>
+<select
+	on:change={() => {
+		eventSelector.blur();
+	}}
+	bind:this={eventSelector}
+	bind:value={scrambleType}
+>
 	<option value="333">3x3</option>
 	<option value="222">2x2</option>
-	<option value="sq1">sq1</option>
+	<option value="444">4x4</option>
+	<option value="555">5x5</option>
+	<option value="666">6x6</option>
+	<option value="777">7x7</option>
+	<option value="333">3x3 OH</option>
+	<option value="333fm">3x3 FMC</option>
+	<option value="minx">Megaminx</option>
+	<option value="pyram">Pyraminx</option>
+	<option value="skewb">Skewb</option>
+	<option value="sq1">Square-1</option>
+	<option value="clock">Clock</option>
 </select>
 <h1 style="color: {timeColor}">
 	{time}
@@ -130,13 +151,17 @@
 			<th> Time </th>
 			<th> ao5 </th>
 			<th> ao12 </th>
+			<th> Delete </th>
 		</tr>
-		{#each timeArray as {time, ao5, ao12}, i (i)}
+		{#each timeArray as { time, ao5, ao12 }, i (i)}
 			<tr>
 				<td>{i + 1}</td>
 				<td>{time}</td>
 				<td>{ao5}</td>
 				<td>{ao12}</td>
+				<td>
+					<button on:click={() => deleteEntry(i)}> X </button>
+				</td>
 			</tr>
 		{/each}
 	</table>
