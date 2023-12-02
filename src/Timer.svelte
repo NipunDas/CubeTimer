@@ -28,15 +28,23 @@
 			if (timing) {
 				time = ((new Date().getTime() - startDate.getTime()) / 1000).toFixed(2);
 				clearInterval(interval);
-				//let ao5 = calculateAverage(5);
 
 				let newEntry: timeEntry = {
 					time: time,
-					ao5: calculateAverage(5),
-					ao12: calculateAverage(12),
+					ao5: '-',
+					ao12: '-',
 				}
 
 				timeArray = [...timeArray, newEntry];
+
+				let ao5 = calculateAverage(5, timeArray.length - 5);
+				let ao12 = calculateAverage(12, timeArray.length - 12);
+				
+				timeArray[timeArray.length - 1].ao5 = ao5;
+				timeArray[timeArray.length - 1].ao12 = ao12;
+
+
+
 				scramble = new Scrambow().setType(scrambleType).get()[0].scramble_string;
 				
 			} else if (event.key === " ") {
@@ -71,17 +79,15 @@
 		
 	}
 
-	function calculateAverage(count: number) {
+	function calculateAverage(count: number, startIndex: number) {
 		// need at least x numbers for an average of x
-		if (timeArray.length < (count - 1)) {
-			console.log(timeArray.length);
+		if (count + startIndex > timeArray.length || startIndex < 0) {
 			return "-";
 		}
 
-		// we're taking the last x - 1 numbers from the array, and convert to an array of numbers
-		// it's x - 1 because the current time isn't added to the array yet, so we'll add it manually
-		let timeSubArray = timeArray.slice(timeArray.length - count + 1);
-		let timeNums: number[] = [Number(time)];
+		// we're taking the last x numbers from the array, and convert to an array of numbers
+		let timeSubArray = timeArray.slice(startIndex, startIndex + count);
+		let timeNums: number[] = [];
 		
 		timeSubArray.forEach((timeEntry) => {
 			timeNums.push(Number(timeEntry.time));
