@@ -70,7 +70,10 @@
 	}
 </script>
 
-<svelte:window on:keydown={handleKeyDown} on:keyup={handleKeyUp} />
+<svelte:window
+	on:keydown|preventDefault={handleKeyDown}
+	on:keyup={handleKeyUp}
+/>
 
 <h1 style="color: {timeColor}">
 	{time}

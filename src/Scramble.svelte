@@ -4,7 +4,7 @@
 
 	let eventSelector: HTMLSelectElement;
 	let scrambleType = "333";
-	let scramblePromise = randomScrambleForEvent(scrambleType);
+	$: scramblePromise = randomScrambleForEvent(scrambleType);
 
 	/* Reactive declaration: if $timing store or scrambleType change (and $timing
        is true), generate a new scramble */
